@@ -1,0 +1,6 @@
+{
+  "name": "SecureCast",
+  "description": "An elite administrative broadcast infrastructure for secure, one-way distribution of sensitive directives to isolated personnel sectors.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

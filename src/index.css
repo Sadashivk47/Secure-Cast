@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-primary: #00A3FF;
+  --color-primary-container: #E0F2FF;
+  --color-on-primary-container: #003A5C;
+  
+  --color-surface: #F4F8FC;
+  --color-surface-container-low: #F8FAFD;
+  --color-surface-container: #EEF2F7;
+  --color-surface-container-high: #E4E9F0;
+  --color-surface-container-highest: #DDE3EB;
+  --color-surface-container-lowest: #ffffff;
+  
+  --color-on-surface: #0F172A;
+  --color-on-surface-variant: #475569;
+  
+  --color-outline: #94A3B8;
+  --color-outline-variant: #E2E8F0;
+}
+
+@layer base {
+  body {
+    @apply bg-surface text-on-surface font-sans;
+  }
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.loading-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scaleX(1); }
+  50% { opacity: .5; transform: scaleX(0.7); }
+}
