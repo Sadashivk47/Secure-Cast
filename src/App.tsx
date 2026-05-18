@@ -92,15 +92,17 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 // --- Constants ---
-const LOGO_URL = "/nlogo.svg";
+const Logo = ({ className = "w-full h-full" }: { className?: string }) => (
+  <ShieldCheck className={cn("text-primary fill-primary/10", className)} />
+);
 
 // --- Components ---
 
 const LoadingScreen = () => (
   <div className="fixed inset-0 flex flex-col items-center justify-center bg-surface z-50">
     <div className="flex flex-col items-center gap-6 text-center">
-      <div className="w-24 h-24 rounded-[32px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex items-center justify-center p-5 border border-white">
-        <img src={LOGO_URL} alt="Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+      <div className="w-24 h-24 rounded-[32px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex items-center justify-center p-6 border border-white">
+        <Logo className="w-12 h-12" />
       </div>
       <div className="space-y-2">
         <h1 className="text-4xl font-bold tracking-tight text-on-surface">SecureCast</h1>
@@ -209,9 +211,12 @@ const Header = ({ title, subtitle, showSearch = true, showBack = false, backPath
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
           </button>
         )}
-        <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center p-1.5 shadow-sm border border-white">
-          <img src={LOGO_URL} alt="Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
-        </div>
+        <button 
+          onClick={() => navigate(isAdmin ? '/admin' : '/inbox')}
+          className="w-9 h-9 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm border border-white hover:border-primary/20 transition-all cursor-pointer active:scale-95"
+        >
+          <Logo />
+        </button>
         <div className="flex flex-col">
           <h1 className="text-[14px] font-bold tracking-tight text-on-surface leading-none uppercase">{title}</h1>
           {subtitle && <p className="text-[9px] font-medium text-on-surface-variant mt-0.5 opacity-60 hidden sm:block">{subtitle}</p>}
@@ -327,8 +332,8 @@ const Login = () => {
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-surface bg-gradient-to-tr from-primary/10 via-surface to-secondary/10">
       <div className="w-full max-w-[380px] flex flex-col gap-4">
         <header className="flex flex-col items-center text-center gap-3">
-          <div className="w-20 h-20 rounded-[28px] bg-white shadow-[0_8px_30px_-5px_rgba(0,0,0,0.06)] flex items-center justify-center p-4 border border-white">
-            <img src={LOGO_URL} alt="Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+          <div className="w-20 h-20 rounded-[28px] bg-white shadow-[0_8px_30px_-5px_rgba(0,0,0,0.06)] flex items-center justify-center p-5 border border-white">
+            <Logo className="w-10 h-10" />
           </div>
           <div className="space-y-1">
             <h1 className="text-3xl font-bold tracking-tight text-on-surface">SecureCast</h1>
