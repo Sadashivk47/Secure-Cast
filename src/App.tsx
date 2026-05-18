@@ -1428,23 +1428,40 @@ const AdminNewGroup = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [creating, setCreating] = useState(false);
+  const [availableContacts, setAvailableContacts] = useState<Contact[]>([]);
+  const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setAvailableContacts(storage.get('contacts') || []);
+  }, []);
+
+  const toggleMemberSelection = (id: string) => {
+    setSelectedContactIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
     try {
       const groups = storage.get('groups') || [];
+      const groupId = name.toLowerCase().replace(/ /g, '-') + '-' + Date.now().toString().slice(-4);
       const newGroup = {
-        id: name.toLowerCase().replace(/ /g, '-'),
+        id: groupId,
         name,
         description,
-        member_count: 0,
+        member_count: selectedContactIds.length,
         is_active: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
+      
       storage.set('groups', [...groups, newGroup]);
+      
+      const memberships = storage.get('memberships') || [];
+      const newMemberships = selectedContactIds.map(cid => ({ group_id: groupId, contact_id: cid }));
+      storage.set('memberships', [...memberships, ...newMemberships]);
+      
       navigate('/admin/groups');
     } catch (err) {
       console.error(err);
@@ -1456,33 +1473,62 @@ const AdminNewGroup = () => {
   return (
     <div className="min-h-screen bg-surface">
       <Header title="New Group" showBack={true} showSearch={false} />
-      <main className="pt-20 px-4 sm:px-6 max-w-lg mx-auto overflow-y-auto">
-        <form onSubmit={handleCreate} className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm space-y-6">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-on-surface-variant uppercase">Group Name</label>
-            <input 
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full h-12 px-4 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/10 outline-none" 
-              placeholder="e.g. Executive Board"
-              required
-            />
+      <main className="pt-20 pb-20 px-4 sm:px-6 max-w-lg mx-auto overflow-y-auto no-scrollbar">
+        <form onSubmit={handleCreate} className="space-y-6">
+          <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm space-y-6">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-on-surface-variant uppercase">Group Name</label>
+              <input 
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full h-12 px-4 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/10 outline-none" 
+                placeholder="e.g. Executive Board"
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-on-surface-variant uppercase">Description</label>
+              <textarea 
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full p-4 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/10 outline-none min-h-[100px]" 
+                placeholder="What is this group for?"
+              />
+            </div>
           </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-on-surface-variant uppercase">Description</label>
-            <textarea 
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full p-4 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/10 outline-none min-h-[100px]" 
-              placeholder="What is this group for?"
-            />
+
+          <div className="space-y-3">
+            <h3 className="text-xs font-bold text-on-surface-variant uppercase px-1">Assign Initial Members ({selectedContactIds.length})</h3>
+            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 no-scrollbar">
+              {availableContacts.map(contact => (
+                <div 
+                  key={contact.id}
+                  onClick={() => toggleMemberSelection(contact.id)}
+                  className={cn(
+                    "flex items-center justify-between p-4 bg-white border rounded-xl cursor-pointer transition-all",
+                    selectedContactIds.includes(contact.id) ? "border-primary bg-primary/5" : "border-outline-variant hover:border-primary/40"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <UserIcon className={cn("w-4 h-4", selectedContactIds.includes(contact.id) ? "text-primary" : "text-outline")} />
+                    <div>
+                      <p className="font-bold text-xs">{contact.full_name}</p>
+                      <p className="text-[10px] text-outline uppercase">{contact.email}</p>
+                    </div>
+                  </div>
+                  {selectedContactIds.includes(contact.id) && <CheckCircle2 className="w-5 h-5 text-primary" />}
+                </div>
+              ))}
+              {availableContacts.length === 0 && <p className="text-center py-10 text-outline text-xs">No registered members found.</p>}
+            </div>
           </div>
+
           <button 
             type="submit"
             disabled={creating || !name}
-            className="w-full h-12 bg-primary text-white font-bold rounded-lg shadow-lg disabled:opacity-50 active:scale-95 transition-all"
+            className="w-full h-14 bg-primary text-white font-bold rounded-xl shadow-lg disabled:opacity-50 active:scale-95 transition-all uppercase text-xs tracking-widest"
           >
-            {creating ? 'Creating...' : 'Create Group'}
+            {creating ? 'Creating Perimeter...' : 'Initialize Group'}
           </button>
         </form>
       </main>
@@ -1885,6 +1931,21 @@ const AdminMembers = () => {
     setAvailableContacts(allContacts.filter((c: any) => !groupMemberIds.includes(c.id)));
   }, [id]);
 
+  const removeMember = (contactId: string) => {
+    const memberships = storage.get('memberships') || [];
+    const newMemberships = memberships.filter((m: any) => !(m.group_id === id && m.contact_id === contactId));
+    storage.set('memberships', newMemberships);
+    
+    const groups = storage.get('groups') || [];
+    storage.set('groups', groups.map((g: any) => g.id === id ? { ...g, member_count: Math.max(0, (g.member_count || 1) - 1) } : g));
+
+    const contact = members.find(c => c.id === contactId);
+    if (contact) {
+      setMembers(prev => prev.filter(c => c.id !== contactId));
+      setAvailableContacts(prev => [...prev, contact]);
+    }
+  };
+
   const addMember = (contactId: string) => {
     const memberships = storage.get('memberships') || [];
     const newMemberships = [...memberships, { group_id: id, contact_id: contactId }];
@@ -1996,15 +2057,27 @@ const AdminMembers = () => {
                   <p className="text-[10px] text-outline font-black uppercase tracking-widest mt-1">{member.email}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-success opacity-40 shadow-sm" />
-                <span className="text-[10px] font-black text-outline uppercase tracking-tighter">Authorized</span>
+              <div className="flex items-center">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); removeMember(member.id); }}
+                  className="p-2.5 rounded-xl hover:bg-error/10 text-error/40 hover:text-error transition-all cursor-pointer"
+                  title="Remove from group"
+                >
+                  <Trash2 className="w-4 h-4 ml-2" />
+                </button>
               </div>
             </div>
           ))}
           {filteredMembers.length === 0 && <p className="text-center py-10 text-outline italic text-xs">No members matching query.</p>}
         </div>
       </main>
+      
+      <button 
+        onClick={() => setShowAdd(true)} 
+        className="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center z-[60] cursor-pointer"
+      >
+        <Plus className="w-8 h-8" />
+      </button>
 
       {/* Selective Message Modal */}
       {showSelectiveMsg && (
